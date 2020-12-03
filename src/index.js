@@ -5,15 +5,19 @@
 
   let user = null;
 
+  function apiURL(path) {
+    return `http://localhost:3000${path}`;
+  }
+
   let wine = document.querySelector("#create-new-wine");
   wine.addEventListener("click", () => {
     showForm();
   });
 
-  //   let login = document.querySelector("#login");
-  //   login.addEventListener("click", () => {
-  //     showLogin();
-  //   });
+  let login = document.querySelector("#login");
+  login.addEventListener("click", () => {
+    showLogin();
+  });
 
   function showForm() {
     mainCenter.innerHTML = `
@@ -46,7 +50,7 @@
       <div class="form-group row">
         <label for="wine-reg" class="col-sm-2 col-form-label"> Region </label>
         <div class="col-sm-10">
-          <input type="text" id="wine-reg" class="form-control"  require/>
+          <input type="text" id="wine-reg" class="form-control"  required/>
         </div>
       </div>
       <a id="love-btn" class="btn btn far">&#xF004;</a>
@@ -161,9 +165,6 @@
     showWine(data);
   }
 
-  function apiURL(path) {
-    return `http://localhost:3000${path}`;
-  }
   let pageNumber = 1;
 
   async function getAllWines() {
@@ -181,16 +182,18 @@
     showWineList(data);
   }
 
+  //shows all wines and also forward and back buttons
   function showWineList(wines) {
     mainRight.innerHTML = `
     <div class="list-group">
+    <h3 class="text-monospace">Wine List</h3>
     ${wines
       .map(function (w) {
-        return `<a data-wine-id="${w.id}" class="wine-link list-group-item list-group-item-action ">${w.name}</a>`;
+        return `<a data-wine-id="${w.id}" class="wine-link list-group-item list-group-item-action text-monospace">${w.name}</a>`;
       })
       .join("")}
     <div class="col-sm-5">
-    <button type="button" id="back-btn" class="btn btn-primary btn-sm">back</button>
+    <button type="button" id="back-btn" class="btn btn-primary btn-sm ">back</button>
     <button type="button" id="forward-btn" class="btn btn-primary btn-sm">forward</button>
     </div>
     </div>
@@ -219,22 +222,87 @@
 
   async function handlesWineLinkClick(event) {
     let wineID = event.target.dataset.wineId;
-    let response = await fetch(apiURL(`/wines/${wineID}`));
-    let data = await response.json();
-    showWine(data);
+    fetchSingleWine(wineID);
   }
 
-  function showWine(wine) {
+  async function fetchSingleWine(wineID) {
+    let response = await fetch(apiURL(`/wines/${wineID}`));
+    let data = await response.json();
+    let response1 = await fetch(apiURL(`/comments?wine_id=${wineID}`));
+    let data1 = await response1.json();
+    showWine(data, data1);
+  }
+
+  //shows each individual wine's info(includes love button, and comment section)
+  function showWine(wine, comments) {
     mainCenter.innerHTML = `
     <div class="wine-info">
-    <h5 class="card-title">${wine.name}</h5>
+    <h4 class="card-title">${wine.name}</h4>
     <h6 class="card-kind">${wine.kind}</h6>
     <h6 class="card-kind">${wine.cost}</h6>
     <h6 class="card-reg">${wine.region}</h6>
     <a id="love-btn" class="btn btn far">&#xF004;</a>
+    <div class="form-group col-sm-10">
+      <label for="exampleFormControlTextarea1">Comment</label>
+      <textarea
+        class="form-control"
+        id="comment-input"
+        maxlength="250"
+      ></textarea>
+      <small id="passwordHelpBlock" class="form-text text-muted">
+        Character limit of 250.
+      </small>
+  
+      <div class="col-sm-10">
+        <input
+          type="submit"
+          data-wine-id="${wine.id}"
+          class="btn btn-primary"
+          id="send-btn"
+          value="Send"
+        />
+      </div>
+      <div>
+        <h5>Comments:</h5>
+        ${comments
+          .map(function (c) {
+            return `
+            <h6>${c.user.name}</h6>
+            <p>${c.comment}</p>
+            `;
+          })
+          .join("")}
+      </div>
+    </div>
   </div>
-</div>
+  
+ 
   `;
+    mainCenter
+      .querySelector("#send-btn")
+      .addEventListener("click", handlesSendButton);
+  }
+
+  function handlesSendButton(e) {
+    let wineID = e.target.dataset.wineId;
+    let commentData = document.querySelector("#comment-input");
+    let comment = commentData.value;
+    createComment(comment, wineID);
+  }
+
+  async function createComment(comment, wineID) {
+    let response = await fetch("http://localhost:3000/comments", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        comment: comment,
+        user_id: user.id,
+        wine_id: wineID,
+      }),
+    });
+    fetchSingleWine(wineID);
   }
 
   getAllWines();
