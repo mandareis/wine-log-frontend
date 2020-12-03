@@ -1,6 +1,4 @@
 (function () {
-  //   const loginBtn = document.querySelector("#login-btn");
-  //   const createWineBtn = document.querySelector("#wine-create-btn");
   const mainLeft = document.querySelector("#main-left");
   const mainCenter = document.querySelector("#main-center");
   const mainRight = document.querySelector("#main-right");
@@ -12,10 +10,10 @@
     showForm();
   });
 
-  let login = document.querySelector("#login");
-  login.addEventListener("click", () => {
-    showLogin();
-  });
+  //   let login = document.querySelector("#login");
+  //   login.addEventListener("click", () => {
+  //     showLogin();
+  //   });
 
   function showForm() {
     mainCenter.innerHTML = `
@@ -24,19 +22,19 @@
       <div class="form-group row">
         <label for="wine-name" class="col-sm-2 col-form-label"> Name </label>
         <div class="col-sm-10">
-          <input type="text" id="wine-name" class="form-control" />
+          <input type="text" id="wine-name" class="form-control" required/>
         </div>
       </div>
       <div class="form-group row">
         <label for="wine-year" class="col-sm-2 col-form-label"> Year </label>
         <div class="col-sm-10">
-          <input type="number" id="wine-year" class="form-control" />
+          <input type="number" id="wine-year" class="form-control" required/>
         </div>
       </div>
       <div class="form-group row">
         <label for="wine-kind" class="col-sm-2 col-form-label"> Kind </label>
         <div class="col-sm-10">
-          <input type="text" id="wine-kind" class="form-control" />
+          <input type="text" id="wine-kind" class="form-control" required/>
         </div>
       </div>
       <div class="form-group row">
@@ -48,10 +46,10 @@
       <div class="form-group row">
         <label for="wine-reg" class="col-sm-2 col-form-label"> Region </label>
         <div class="col-sm-10">
-          <input type="text" id="wine-reg" class="form-control" />
+          <input type="text" id="wine-reg" class="form-control"  require/>
         </div>
       </div>
-      <a class="btn btn-danger fas">&#xF004;</a>
+      <a id="love-btn" class="btn btn far">&#xF004;</a>
       <div class="form-group row">
         <div class="col-sm-10">
           <input type="submit" class="btn btn-primary" id="wine-create-btn" value="Submit" />
@@ -64,6 +62,19 @@
     mainCenter
       .querySelector("#wine-create-form")
       .addEventListener("submit", handlesWineCreateForm);
+
+    let loveBtn = document.querySelector("#love-btn");
+    loveBtn.addEventListener("click", handlesLoveBtn);
+  }
+
+  function handlesLoveBtn(e) {
+    if (e.target.classList.contains("fas")) {
+      e.target.classList.remove("fas");
+      e.target.classList.add("far");
+    } else {
+      e.target.classList.remove("far");
+      e.target.classList.add("fas");
+    }
   }
 
   function handlesWineCreateForm() {
@@ -82,11 +93,20 @@
 
   function showUserSidebar() {
     mainLeft.innerHTML = `
-        <div class="alert alert-success">
+        <div class="alert alert-success sm-5">
             Hello, ${user.name}!
         </div>
       `;
+    sleep(1500).then(() => {
+      mainLeft.innerHTML = "";
+    });
+    showForm();
   }
+
+  function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
   function showLogin() {
     mainLeft.innerHTML = `
       <div class="user-container">
@@ -145,12 +165,17 @@
     return `http://localhost:3000${path}`;
   }
   let pageNumber = 1;
+
   async function getAllWines() {
     let response = await fetch(apiURL(`/wines?page=${pageNumber}`));
     let data = await response.json();
     if (!response.ok) {
       showError(data.error);
       return;
+    }
+    if (data.length === 0) {
+      pageNumber--;
+      return await getAllWines();
     }
     // data is our wine object, since the response was ".ok"!
     showWineList(data);
@@ -206,6 +231,7 @@
     <h6 class="card-kind">${wine.kind}</h6>
     <h6 class="card-kind">${wine.cost}</h6>
     <h6 class="card-reg">${wine.region}</h6>
+    <a id="love-btn" class="btn btn far">&#xF004;</a>
   </div>
 </div>
   `;
