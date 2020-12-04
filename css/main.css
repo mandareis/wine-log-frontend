@@ -1,0 +1,27 @@
+#logo-img {
+  width: 125px;
+  height: 125px;
+}
+
+#back-btn,
+#forward-btn {
+  display: inline-block;
+}
+
+#wine-name,
+#update-btn,
+#delete-btn {
+  display: inline-block;
+}
+
+/* show wine's button div's  */
+/* <div class="col-sm-5">
+
+</div> */
+/* 
+<div class="col-sm-5">
+
+</div> */
+
+/* show wine's comment div */
+/* <div class="form-group col-sm-10"> */

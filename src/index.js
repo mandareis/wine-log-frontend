@@ -9,9 +9,13 @@
     return `http://localhost:3000${path}`;
   }
 
+  function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
   let wine = document.querySelector("#create-new-wine");
   wine.addEventListener("click", () => {
-    showForm();
+    editForm(handlesWineCreateForm);
   });
 
   let login = document.querySelector("#login");
@@ -19,10 +23,10 @@
     showLogin();
   });
 
-  function showForm() {
+  function editForm(submitHandler) {
     mainCenter.innerHTML = `
     <div class="create-wine-form">
-    <form id="wine-create-form">
+    <form id="wine-edit-form">
       <div class="form-group row">
         <label for="wine-name" class="col-sm-2 col-form-label"> Name </label>
         <div class="col-sm-10">
@@ -53,7 +57,6 @@
           <input type="text" id="wine-reg" class="form-control"  required/>
         </div>
       </div>
-      <a id="love-btn" class="btn btn far">&#xF004;</a>
       <div class="form-group row">
         <div class="col-sm-10">
           <input type="submit" class="btn btn-primary" id="wine-create-btn" value="Submit" />
@@ -64,11 +67,21 @@
   `;
 
     mainCenter
-      .querySelector("#wine-create-form")
-      .addEventListener("submit", handlesWineCreateForm);
-
-    let loveBtn = document.querySelector("#love-btn");
-    loveBtn.addEventListener("click", handlesLoveBtn);
+      .querySelector("#wine-edit-form")
+      .addEventListener("submit", function (e) {
+        e.preventDefault();
+        let wineName = document.querySelector("#wine-name");
+        let name = wineName.value;
+        let wineYear = document.querySelector("#wine-year");
+        let year = wineYear.value;
+        let wineKind = document.querySelector("#wine-kind");
+        let kind = wineKind.value;
+        let wineCost = document.querySelector("#wine-cost");
+        let cost = wineCost.value;
+        let wineReg = document.querySelector("#wine-reg");
+        let reg = wineReg.value;
+        submitHandler({ name, year, kind, cost, reg });
+      });
   }
 
   function handlesLoveBtn(e) {
@@ -81,48 +94,33 @@
     }
   }
 
-  function handlesWineCreateForm() {
-    let wineName = document.querySelector("#wine-name");
-    let name = wineName.value;
-    let wineYear = document.querySelector("#wine-year");
-    let year = wineYear.value;
-    let wineKind = document.querySelector("#wine-kind");
-    let kind = wineKind.value;
-    let wineCost = document.querySelector("#wine-cost");
-    let cost = wineCost.value;
-    let wineReg = document.querySelector("#wine-reg");
-    let reg = wineReg.value;
-    createWine({ name, year, kind, cost, reg });
+  function handlesWineCreateForm(wine) {
+    createWine(wine);
   }
 
-  function showUserSidebar() {
+  async function showUserSidebar() {
     mainLeft.innerHTML = `
-        <div class="alert alert-success sm-5">
+        <div class="alert alert-success sm-5 text-monospace">
             Hello, ${user.name}!
         </div>
       `;
-    sleep(1500).then(() => {
-      mainLeft.innerHTML = "";
-    });
-    showForm();
-  }
-
-  function sleep(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    editForm(handlesWineCreateForm);
+    await sleep(1500);
+    mainLeft.innerHTML = "";
   }
 
   function showLogin() {
     mainLeft.innerHTML = `
       <div class="user-container">
       <div class="form-group row">
-      <label for="user-name" class="col-sm-2 col-form-label"> Name </label>
+      <label for="user-name" class="col-sm-2 col-form-label text-monospace"> Name </label>
       <div class="col-sm-5">
-        <input type="text" id="user-name" class="form-control" />
+        <input type="text" id="user-name" class="form-control text-monospace" />
       </div>
     </div>
     <div class="form-group row">
     <div class="col-sm-5">
-      <input type="submit" class="btn btn-primary" id="login-btn" value="Login" />
+      <input type="submit" class="btn btn-primary text-monospace" id="login-btn" value="Login" />
     </div>
   </div>
       `;
@@ -134,7 +132,7 @@
   function handlesLoginBtn() {
     let userData = document.querySelector("#user-name");
     let userName = userData.value;
-    createUser(userName);
+    validateLogin(userName);
   }
 
   async function createUser(userName) {
@@ -146,15 +144,35 @@
       body: JSON.stringify({ name: userName }),
     });
     user = await response.json();
+    listMode = "my-wines";
+    getAllWines();
     showUserSidebar();
   }
+
+  function validateLogin(userName) {
+    let name = document.querySelector("#user-name").value;
+    if (name == "") {
+      alert("Name must be filled out");
+      return false;
+    } else {
+      createUser(userName);
+    }
+  }
+
   async function createWine(wineData) {
+    let postData = wineData;
+    if (user) {
+      postData = {
+        ...wineData,
+        user_id: user.id,
+      };
+    }
     let response = await fetch("http://localhost:3000/wines", {
       method: "POST",
       headers: {
         "Content-type": "application/json",
       },
-      body: JSON.stringify(wineData),
+      body: JSON.stringify(postData),
     });
     let data = await response.json();
     if (!response.ok) {
@@ -162,19 +180,31 @@
       return;
     }
     // data is our wine object, since the response was ".ok"!
-    showWine(data);
+    showWine(data, []);
+    getAllWines();
   }
 
+  // app state
   let pageNumber = 1;
+  let listMode = "all-wines"; // could be "my-wines" or "all-wines"
 
   async function getAllWines() {
-    let response = await fetch(apiURL(`/wines?page=${pageNumber}`));
+    let response;
+    if (listMode === "my-wines") {
+      response = await fetch(
+        apiURL(`/wines?liked_by=${user.id}&page=${pageNumber}`)
+      );
+    } else if (listMode === "all-wines") {
+      response = await fetch(apiURL(`/wines?page=${pageNumber}`));
+    } else {
+      throw new Error(`invalid listMode: ${listMode}`);
+    }
     let data = await response.json();
     if (!response.ok) {
       showError(data.error);
       return;
     }
-    if (data.length === 0) {
+    if (data.length === 0 && pageNumber > 1) {
       pageNumber--;
       return await getAllWines();
     }
@@ -186,15 +216,19 @@
   function showWineList(wines) {
     mainRight.innerHTML = `
     <div class="list-group">
-    <h3 class="text-monospace">Wine List</h3>
+    <div class="btn-group" role="group" aria-label="Basic example">
+    <button type="button" id="my-wines" class="wine-list-selector btn btn-secondary text-monosapce">My Favorites</button>
+    <button type="button" id="all-wines" class="wine-list-selector btn btn-secondary text-monospace">All Wines</button>
+    </div> 
     ${wines
       .map(function (w) {
-        return `<a data-wine-id="${w.id}" class="wine-link list-group-item list-group-item-action text-monospace">${w.name}</a>`;
+        return `<a data-wine-id="${w.id}" class="wine-link list-group-item list-group-item-action text-monospace">${w.name}</a>
+        `;
       })
       .join("")}
     <div class="col-sm-5">
-    <button type="button" id="back-btn" class="btn btn-primary btn-sm ">back</button>
-    <button type="button" id="forward-btn" class="btn btn-primary btn-sm">forward</button>
+    <button type="button" id="back-btn" class="btn btn-primary btn-sm text-monospace ">back</button>
+    <button type="button" id="forward-btn" class="btn btn-primary btn-sm text-monospace">forward</button>
     </div>
     </div>
     `;
@@ -206,6 +240,13 @@
 
     let forwardBtn = document.querySelector("#forward-btn");
     forwardBtn.addEventListener("click", handlesForwardBtn);
+    const seeSawButtonHandler = (e) => {
+      listMode = e.target.id;
+      getAllWines();
+    };
+    for (let e of mainRight.querySelectorAll(".wine-list-selector")) {
+      e.addEventListener("click", seeSawButtonHandler);
+    }
   }
 
   function handlesBackBtn() {
@@ -237,50 +278,74 @@
   function showWine(wine, comments) {
     mainCenter.innerHTML = `
     <div class="wine-info">
-    <h4 class="card-title">${wine.name}</h4>
-    <h6 class="card-kind">${wine.kind}</h6>
-    <h6 class="card-kind">${wine.cost}</h6>
-    <h6 class="card-reg">${wine.region}</h6>
-    <a id="love-btn" class="btn btn far">&#xF004;</a>
-    <div class="form-group col-sm-10">
-      <label for="exampleFormControlTextarea1">Comment</label>
-      <textarea
-        class="form-control"
-        id="comment-input"
-        maxlength="250"
-      ></textarea>
-      <small id="passwordHelpBlock" class="form-text text-muted">
-        Character limit of 250.
-      </small>
-  
-      <div class="col-sm-10">
-        <input
-          type="submit"
-          data-wine-id="${wine.id}"
-          class="btn btn-primary"
-          id="send-btn"
-          value="Send"
-        />
-      </div>
-      <div>
-        <h5>Comments:</h5>
-        ${comments
-          .map(function (c) {
-            return `
-            <h6>${c.user.name}</h6>
-            <p>${c.comment}</p>
-            `;
-          })
-          .join("")}
-      </div>
+  <h4 id="wine-name" class="card-title text-monospace">${wine.name}</h4>
+  <button
+    type="button"
+    id="update-btn"
+    data-wine-id="${wine.id}"
+    class="btn btn-primary btn-sm-5 text-monospace">
+    Update
+  </button>
+  <button
+    type="button"
+    id="delete-btn"
+    data-wine-id="${wine.id}"
+    class="btn btn-primary btn-sm-5 text-monospace">
+    Delete
+  </button>
+  <h6 class="card-kind text-monospace">${wine.year}</h6>
+  <h6 class="card-kind text-monospace">${wine.kind}</h6>
+  <h6 class="card-kind text-monospace">${wine.cost}</h6>
+  <h6 class="card-reg text-monospace">${wine.region}</h6>
+  <a id="love-btn" class="btn btn far">&#xF004;</a>
+ <br>
+ <br>
+    <label class="text-monospace" for="exampleFormControlTextarea1"
+      >Comment</label>
+      <br>
+    <textarea
+      class="form-control text-monospace"
+      id="comment-input"
+      maxlength="250"
+    ></textarea>
+    <small id="passwordHelpBlock" class="form-text text-muted text-monospace">
+      Character limit of 250.
+    </small>
+
+    <div class="col-sm-10">
+      <input
+        type="submit"
+        data-wine-id="${wine.id}"
+        class="btn btn-primary text-monospace"
+        id="send-btn"
+        value="Send"
+      />
+    </div>
+    <div>
+      <h5 class="text-monospace">Comments:</h5>
+      ${comments
+        .map(function (c) {
+          return `
+      <h6 class="text-monospace">${c.user.name}</h6>
+      <p class="text-monospace">${c.comment}</p>
+      `;
+        })
+        .join("")}
+        
     </div>
   </div>
-  
- 
-  `;
+</div> `;
     mainCenter
       .querySelector("#send-btn")
       .addEventListener("click", handlesSendButton);
+    mainCenter
+      .querySelector("#update-btn")
+      .addEventListener("click", handlesUpdateButton(wine));
+    mainCenter
+      .querySelector("#delete-btn")
+      .addEventListener("click", handlesDeleteButton);
+    let loveBtn = document.querySelector("#love-btn");
+    loveBtn.addEventListener("click", handlesLoveBtn);
   }
 
   function handlesSendButton(e) {
@@ -291,7 +356,7 @@
   }
 
   async function createComment(comment, wineID) {
-    let response = await fetch("http://localhost:3000/comments", {
+    await fetch("http://localhost:3000/comments", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -305,6 +370,32 @@
     fetchSingleWine(wineID);
   }
 
+  function handlesUpdateButton(wineData) {
+    return function () {
+      editForm(function (wine) {
+        wine.id = wineData.id;
+        updatesWine(wine);
+      });
+      document.querySelector("#wine-name").value = wineData.name;
+      document.querySelector("#wine-year").value = wineData.year;
+      document.querySelector("#wine-kind").value = wineData.kind;
+      document.querySelector("#wine-cost").value = wineData.cost;
+      document.querySelector("#wine-reg").value = wineData.region;
+    };
+  }
+
+  async function updatesWine(wine) {
+    await fetch(apiURL(`/wines/${wine.id}`), {
+      method: "PATCH",
+      headers: {
+        "Content-type": "application/json",
+      },
+      body: JSON.stringify(wine),
+    });
+    fetchSingleWine(wine.id);
+  }
+
+  function handlesDeleteButton() {}
   getAllWines();
   showLogin();
 })();
