@@ -13,8 +13,8 @@
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  let wine = document.querySelector("#create-new-wine");
-  wine.addEventListener("click", () => {
+  let wineCreation = document.querySelector("#create-new-wine");
+  wineCreation.addEventListener("click", () => {
     editForm(handlesWineCreateForm);
   });
 
@@ -79,18 +79,47 @@
         let wineCost = document.querySelector("#wine-cost");
         let cost = wineCost.value;
         let wineReg = document.querySelector("#wine-reg");
-        let reg = wineReg.value;
-        submitHandler({ name, year, kind, cost, reg });
+        let region = wineReg.value;
+        submitHandler({ name, year, kind, cost, region });
       });
   }
 
-  function handlesLoveBtn(e) {
-    if (e.target.classList.contains("fas")) {
-      e.target.classList.remove("fas");
-      e.target.classList.add("far");
+  function fillHeart(e) {
+    e.classList.remove("far");
+    e.classList.add("fas");
+  }
+  function isHeartFull(e) {
+    return e.classList.contains("fas");
+  }
+  function unfillHeart(e) {
+    e.classList.remove("fas");
+    e.classList.add("far");
+  }
+
+  async function handlesLoveBtn(e) {
+    let wineID = e.target.dataset.wineId;
+    let lovesID = e.target.dataset.loveId;
+    const doesLike = isHeartFull(e.target);
+    if (!doesLike) {
+      await fetch(apiURL("/loves"), {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: user.id,
+          wine_id: wineID,
+        }),
+      });
+      fillHeart(e.target);
     } else {
-      e.target.classList.remove("far");
-      e.target.classList.add("fas");
+      await fetch(apiURL(`/loves/${lovesID}`), {
+        method: "DELETE",
+      });
+      unfillHeart(e.target);
+    }
+    if (listMode == "my-wines") {
+      getAllWines();
     }
   }
 
@@ -180,7 +209,7 @@
       return;
     }
     // data is our wine object, since the response was ".ok"!
-    showWine(data, []);
+    showWine(data, [], true);
     getAllWines();
   }
 
@@ -191,6 +220,12 @@
   async function getAllWines() {
     let response;
     if (listMode === "my-wines") {
+      if (!user) {
+        // cannot get liked wines if not
+        // logged in
+        showWineList([]);
+        return;
+      }
       response = await fetch(
         apiURL(`/wines?liked_by=${user.id}&page=${pageNumber}`)
       );
@@ -220,12 +255,15 @@
     <button type="button" id="my-wines" class="wine-list-selector btn btn-secondary text-monosapce">My Favorites</button>
     <button type="button" id="all-wines" class="wine-list-selector btn btn-secondary text-monospace">All Wines</button>
     </div> 
-    ${wines
-      .map(function (w) {
-        return `<a data-wine-id="${w.id}" class="wine-link list-group-item list-group-item-action text-monospace">${w.name}</a>
-        `;
-      })
-      .join("")}
+    ${
+      wines.length === 0
+        ? `<p>No wines to show!</p>`
+        : wines
+            .map(function (w) {
+              return `<a data-wine-id="${w.id}" class="wine-link list-group-item list-group-item-action text-monospace">${w.name}</a>`;
+            })
+            .join("")
+    }
     <div class="col-sm-5">
     <button type="button" id="back-btn" class="btn btn-primary btn-sm text-monospace ">back</button>
     <button type="button" id="forward-btn" class="btn btn-primary btn-sm text-monospace">forward</button>
@@ -271,33 +309,55 @@
     let data = await response.json();
     let response1 = await fetch(apiURL(`/comments?wine_id=${wineID}`));
     let data1 = await response1.json();
-    showWine(data, data1);
+    let lovesID = null;
+    if (user) {
+      let response2 = await fetch(
+        apiURL(`/loves?user_id=${user.id}&wine_id=${wineID}`)
+      );
+      let data2 = await response2.json();
+      lovesID = data2[0]?.id;
+    }
+    showWine(data, data1, lovesID);
   }
 
   //shows each individual wine's info(includes love button, and comment section)
-  function showWine(wine, comments) {
+  function showWine(wine, comments, lovesID) {
+    // fas is empty
+    // far is filled
+    let btnChange = "far";
+    if (lovesID) {
+      btnChange = "fas";
+    }
+    let buttons = "";
+    if (user) {
+      buttons = `
+          <button
+          type="button"
+          id="update-btn"
+          data-wine-id="${wine.id}"
+          class="btn btn-primary btn-sm-5 text-monospace">
+          Update
+        </button>
+        <button
+          type="button"
+          id="delete-btn"
+          data-wine-id="${wine.id}"
+          class="btn btn-primary btn-sm-5 text-monospace">
+          Delete
+        </button>
+    `;
+    }
     mainCenter.innerHTML = `
     <div class="wine-info">
   <h4 id="wine-name" class="card-title text-monospace">${wine.name}</h4>
-  <button
-    type="button"
-    id="update-btn"
-    data-wine-id="${wine.id}"
-    class="btn btn-primary btn-sm-5 text-monospace">
-    Update
-  </button>
-  <button
-    type="button"
-    id="delete-btn"
-    data-wine-id="${wine.id}"
-    class="btn btn-primary btn-sm-5 text-monospace">
-    Delete
-  </button>
+  ${buttons}
   <h6 class="card-kind text-monospace">${wine.year}</h6>
   <h6 class="card-kind text-monospace">${wine.kind}</h6>
   <h6 class="card-kind text-monospace">${wine.cost}</h6>
   <h6 class="card-reg text-monospace">${wine.region}</h6>
-  <a id="love-btn" class="btn btn far">&#xF004;</a>
+  <a id="love-btn" data-wine-id="${
+    wine.id
+  }" data-love-id="${lovesID}" class="btn btn ${btnChange}">&#xF004;</a>
  <br>
  <br>
     <label class="text-monospace" for="exampleFormControlTextarea1"
@@ -338,18 +398,21 @@
     mainCenter
       .querySelector("#send-btn")
       .addEventListener("click", handlesSendButton);
-    mainCenter
-      .querySelector("#update-btn")
-      .addEventListener("click", handlesUpdateButton(wine));
-    mainCenter
-      .querySelector("#delete-btn")
-      .addEventListener("click", handlesDeleteButton);
+    if (user) {
+      mainCenter
+        .querySelector("#update-btn")
+        .addEventListener("click", handlesUpdateButton(wine));
+      mainCenter
+        .querySelector("#delete-btn")
+        .addEventListener("click", handlesDeleteButton(wine));
+    }
     let loveBtn = document.querySelector("#love-btn");
     loveBtn.addEventListener("click", handlesLoveBtn);
   }
 
   function handlesSendButton(e) {
     let wineID = e.target.dataset.wineId;
+    console.log(wineID);
     let commentData = document.querySelector("#comment-input");
     let comment = commentData.value;
     createComment(comment, wineID);
@@ -395,7 +458,15 @@
     fetchSingleWine(wine.id);
   }
 
-  function handlesDeleteButton() {}
+  function handlesDeleteButton(wine) {
+    return async () => {
+      await fetch(apiURL(`/wines/${wine.id}`), {
+        method: "DELETE",
+      });
+      mainCenter.innerHTML = "";
+      getAllWines();
+    };
+  }
   getAllWines();
   showLogin();
 })();
