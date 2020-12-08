@@ -14,14 +14,34 @@
   display: inline-block;
 }
 
-/* show wine's button div's  */
-/* <div class="col-sm-5">
+.wine-image {
+  height: 400px;
+  display: inline-block;
+}
 
-</div> */
-/* 
-<div class="col-sm-5">
+.footer {
+  left: 0;
+  bottom: 0;
+  text-align: center;
+  position: fixed;
+}
 
-</div> */
+#nav-right {
+  text-align: right;
+}
 
-/* show wine's comment div */
-/* <div class="form-group col-sm-10"> */
+#logo-img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.navbar {
+  text-align: left;
+}
+
+#update-btn,
+#delete-btn {
+  width: 10%;
+  font-size: 12px;
+}

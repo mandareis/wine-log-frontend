@@ -2,6 +2,8 @@
   const mainLeft = document.querySelector("#main-left");
   const mainCenter = document.querySelector("#main-center");
   const mainRight = document.querySelector("#main-right");
+  const navRight = document.querySelector("#nav-right");
+  const navLeft = document.querySelector("nav-left");
 
   let user = null;
 
@@ -34,9 +36,15 @@
         </div>
       </div>
       <div class="form-group row">
+      <label for="wine-img-url" class="col-sm-2 col-form-label"> Image URL </label>
+      <div class="col-sm-10">
+        <input type="text" id="wine-img-url" class="form-control" required/>
+      </div>
+    </div>
+      <div class="form-group row">
         <label for="wine-year" class="col-sm-2 col-form-label"> Year </label>
         <div class="col-sm-10">
-          <input type="number" id="wine-year" class="form-control" required/>
+          <input type="number" id="wine-year" class="form-control" />
         </div>
       </div>
       <div class="form-group row">
@@ -72,6 +80,8 @@
         e.preventDefault();
         let wineName = document.querySelector("#wine-name");
         let name = wineName.value;
+        let wineImgURL = document.querySelector("#wine-img-url");
+        let imgUrl = wineImgURL.value;
         let wineYear = document.querySelector("#wine-year");
         let year = wineYear.value;
         let wineKind = document.querySelector("#wine-kind");
@@ -80,7 +90,7 @@
         let cost = wineCost.value;
         let wineReg = document.querySelector("#wine-reg");
         let region = wineReg.value;
-        submitHandler({ name, year, kind, cost, region });
+        submitHandler({ name, year, kind, cost, region, img_url: imgUrl });
       });
   }
 
@@ -112,6 +122,7 @@
         }),
       });
       fillHeart(e.target);
+      fetchSingleWine(wineID);
     } else {
       await fetch(apiURL(`/loves/${lovesID}`), {
         method: "DELETE",
@@ -140,18 +151,26 @@
 
   function showLogin() {
     mainLeft.innerHTML = `
-      <div class="user-container">
-      <div class="form-group row">
-      <label for="user-name" class="col-sm-2 col-form-label text-monospace"> Name </label>
-      <div class="col-sm-5">
-        <input type="text" id="user-name" class="form-control text-monospace" />
-      </div>
-    </div>
-    <div class="form-group row">
+    <div class="user-container">
+  <div class="form-group row">
+    <label for="user-name" class="col-sm-2 col-form-label text-monospace">
+      Name
+    </label>
     <div class="col-sm-5">
-      <input type="submit" class="btn btn-primary text-monospace" id="login-btn" value="Login" />
+      <input type="text" id="user-name" class="form-control text-monospace" />
     </div>
   </div>
+  <div class="form-group row">
+    <div class="col-sm-5">
+      <input
+        type="submit"
+        class="btn btn-primary text-monospace"
+        id="login-btn"
+        value="Login"
+      />
+    </div>
+  </div>
+</div>
       `;
     mainLeft
       .querySelector("#login-btn")
@@ -176,6 +195,9 @@
     listMode = "my-wines";
     getAllWines();
     showUserSidebar();
+    hideCreateNewWineForm();
+    hideLoginBtn();
+    currentUser();
   }
 
   function validateLogin(userName) {
@@ -249,25 +271,35 @@
 
   //shows all wines and also forward and back buttons
   function showWineList(wines) {
+    let myWinesActive = "";
+    let allWinesActive = "";
+    if (listMode == "my-wines") {
+      myWinesActive = "active";
+    } else if (listMode == "all-wines") {
+      allWinesActive = "active";
+    }
+
     mainRight.innerHTML = `
-    <div class="list-group">
-    <div class="btn-group" role="group" aria-label="Basic example">
-    <button type="button" id="my-wines" class="wine-list-selector btn btn-secondary text-monosapce">My Favorites</button>
-    <button type="button" id="all-wines" class="wine-list-selector btn btn-secondary text-monospace">All Wines</button>
+    <div class="mb-3 d-flex justify-content-around">
+      <div class="btn-group" role="group" aria-label="Basic example">
+        <button type="button" id="my-wines" class="wine-list-selector ${myWinesActive} btn btn-primary text-monospace">My Favorites</button>
+        <button type="button" id="all-wines" class="wine-list-selector ${allWinesActive} btn btn-primary text-monospace">All Wines</button>
+      </div>
     </div> 
+    <div class="list-group">
     ${
       wines.length === 0
-        ? `<p>No wines to show!</p>`
+        ? `<div class="text-center text-muted"><p>No wines to show!</p></div>`
         : wines
             .map(function (w) {
               return `<a data-wine-id="${w.id}" class="wine-link list-group-item list-group-item-action text-monospace">${w.name}</a>`;
             })
             .join("")
     }
-    <div class="col-sm-5">
+    </div>
+    <div class="d-flex justify-content-between mt-3 mb-3">
     <button type="button" id="back-btn" class="btn btn-primary btn-sm text-monospace ">back</button>
     <button type="button" id="forward-btn" class="btn btn-primary btn-sm text-monospace">forward</button>
-    </div>
     </div>
     `;
     for (let e of mainRight.querySelectorAll(".wine-link")) {
@@ -329,37 +361,26 @@
       btnChange = "fas";
     }
     let buttons = "";
+    let commentDiv = "";
     if (user) {
       buttons = `
           <button
           type="button"
           id="update-btn"
           data-wine-id="${wine.id}"
-          class="btn btn-primary btn-sm-5 text-monospace">
+          class="btn btn-primary btn-sm text-monospace">
           Update
         </button>
         <button
           type="button"
           id="delete-btn"
           data-wine-id="${wine.id}"
-          class="btn btn-primary btn-sm-5 text-monospace">
+          class="btn btn-primary btn-sm text-monospace">
           Delete
         </button>
     `;
-    }
-    mainCenter.innerHTML = `
-    <div class="wine-info">
-  <h4 id="wine-name" class="card-title text-monospace">${wine.name}</h4>
-  ${buttons}
-  <h6 class="card-kind text-monospace">${wine.year}</h6>
-  <h6 class="card-kind text-monospace">${wine.kind}</h6>
-  <h6 class="card-kind text-monospace">${wine.cost}</h6>
-  <h6 class="card-reg text-monospace">${wine.region}</h6>
-  <a id="love-btn" data-wine-id="${
-    wine.id
-  }" data-love-id="${lovesID}" class="btn btn ${btnChange}">&#xF004;</a>
- <br>
- <br>
+      commentDiv = `
+    <div class="comment-box">
     <label class="text-monospace" for="exampleFormControlTextarea1"
       >Comment</label>
       <br>
@@ -371,23 +392,42 @@
     <small id="passwordHelpBlock" class="form-text text-muted text-monospace">
       Character limit of 250.
     </small>
+</div>
+<div class="col-sm-10">
+<input
+  type="submit"
+  data-wine-id="${wine.id}"
+  class="btn btn-primary text-monospace"
+  id="send-btn"
+  value="Send"
+/>
+</div>`;
+    }
 
-    <div class="col-sm-10">
-      <input
-        type="submit"
-        data-wine-id="${wine.id}"
-        class="btn btn-primary text-monospace"
-        id="send-btn"
-        value="Send"
-      />
-    </div>
-    <div>
+    mainCenter.innerHTML = `
+    <div class="wine-info">
+  <h4 id="wine-name" class="card-title text-monospace">${wine.name}</h4>
+  </br>
+  ${buttons}
+  <h6 class="card-kind text-monospace">${wine.year}</h6>
+  <img class="wine-image mx-auto d-block" src="${wine.img_url}">
+  <h6 class="card-kind text-monospace">${wine.kind}</h6>
+  <h6 class="card-kind text-monospace">${wine.cost}</h6>
+  <h6 class="card-reg text-monospace">${wine.region}</h6>
+  <a id="love-btn" data-wine-id="${
+    wine.id
+  }" data-love-id="${lovesID}" class="btn btn ${btnChange}">&#xF004;</a>
+ <br>
+ <br>
+ ${commentDiv}
+    </br>
       <h5 class="text-monospace">Comments:</h5>
       ${comments
         .map(function (c) {
           return `
       <h6 class="text-monospace">${c.user.name}</h6>
-      <p class="text-monospace">${c.comment}</p>
+      <p class="text-monospace">${c.comment}  <a data-wine-id="${c.wine_id}" data-comment-id="${c.id}"class="text-danger text-monospace delete-comment-btn">Delete</a></p>
+     
       `;
         })
         .join("")}
@@ -405,6 +445,10 @@
       mainCenter
         .querySelector("#delete-btn")
         .addEventListener("click", handlesDeleteButton(wine));
+
+      for (let e of mainCenter.querySelectorAll(".delete-comment-btn")) {
+        e.addEventListener("click", handlesDeleteCommentBtn);
+      }
     }
     let loveBtn = document.querySelector("#love-btn");
     loveBtn.addEventListener("click", handlesLoveBtn);
@@ -412,11 +456,17 @@
 
   function handlesSendButton(e) {
     let wineID = e.target.dataset.wineId;
-    console.log(wineID);
     let commentData = document.querySelector("#comment-input");
     let comment = commentData.value;
     createComment(comment, wineID);
   }
+
+  // function myFetch(url, options = {}) {
+  //   if (user) {
+  //     options.headers["x-user-id"] = user.id;
+  //   }
+  //   return fetch(url, options);
+  // }
 
   async function createComment(comment, wineID) {
     await fetch("http://localhost:3000/comments", {
@@ -433,6 +483,14 @@
     fetchSingleWine(wineID);
   }
 
+  async function handlesDeleteCommentBtn(event) {
+    let wineID = event.target.dataset.wineId;
+    let getComment = event.target.dataset.commentId;
+    await fetch(apiURL(`/comments/${getComment}`), {
+      method: "DELETE",
+    });
+    fetchSingleWine(wineID);
+  }
   function handlesUpdateButton(wineData) {
     return function () {
       editForm(function (wine) {
@@ -440,10 +498,11 @@
         updatesWine(wine);
       });
       document.querySelector("#wine-name").value = wineData.name;
+      document.querySelector("#wine-reg").value = wineData.region;
       document.querySelector("#wine-year").value = wineData.year;
       document.querySelector("#wine-kind").value = wineData.kind;
       document.querySelector("#wine-cost").value = wineData.cost;
-      document.querySelector("#wine-reg").value = wineData.region;
+      document.querySelector("#wine-img-url").value = wineData.img_url;
     };
   }
 
@@ -467,6 +526,31 @@
       getAllWines();
     };
   }
+
+  function hideCreateNewWineForm() {
+    let form = document.querySelector("#create-new-wine");
+    if (!user) {
+      form.style.display = "none";
+    } else {
+      form.style.display = "block";
+    }
+  }
+
+  function hideLoginBtn() {
+    let login = document.querySelector("#login");
+    if (user) {
+      login.style.display = "none";
+    } else {
+      login.style.display = "block";
+    }
+  }
+
+  function currentUser() {
+    navRight.innerHTML = `
+    <p class="text-monospace">${user.name} is currently signed in</p>`;
+  }
+
+  hideCreateNewWineForm();
   getAllWines();
   showLogin();
 })();
