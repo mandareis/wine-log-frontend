@@ -25,6 +25,9 @@
   text-align: center;
   position: fixed;
 }
+.footer-spacer {
+  height: 30px;
+}
 
 #nav-right {
   text-align: right;
@@ -42,6 +45,8 @@
 
 #update-btn,
 #delete-btn {
-  width: 10%;
   font-size: 12px;
+}
+.delete-comment-btn {
+  cursor: pointer;
 }

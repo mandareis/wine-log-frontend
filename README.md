@@ -1,6 +1,6 @@
 # Wine-log
 
-### This app allows you to log every wine you've ever loved. You simply need to login and start creating new wine entries. You will always be prepared to know which wine to bring to the next get together.
+### This app allows you to log every wine you've ever loved. You simply need to login and start creating new wine entries. You will always know what to bring to the next get together!
 
 ## Installation
 

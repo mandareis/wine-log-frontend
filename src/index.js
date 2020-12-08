@@ -3,7 +3,7 @@
   const mainCenter = document.querySelector("#main-center");
   const mainRight = document.querySelector("#main-right");
   const navRight = document.querySelector("#nav-right");
-  const navLeft = document.querySelector("nav-left");
+  // const navLeft = document.querySelector("nav-left");
 
   let user = null;
 
@@ -28,50 +28,57 @@
   function editForm(submitHandler) {
     mainCenter.innerHTML = `
     <div class="create-wine-form">
-    <form id="wine-edit-form">
-      <div class="form-group row">
-        <label for="wine-name" class="col-sm-2 col-form-label"> Name </label>
-        <div class="col-sm-10">
-          <input type="text" id="wine-name" class="form-control" required/>
-        </div>
-      </div>
-      <div class="form-group row">
-      <label for="wine-img-url" class="col-sm-2 col-form-label"> Image URL </label>
+  <form id="wine-edit-form">
+    <div class="form-group row">
+      <label for="wine-name" class="col-sm-2 col-form-label"> Name </label>
       <div class="col-sm-10">
-        <input type="text" id="wine-img-url" class="form-control" required/>
+        <input type="text" id="wine-name" class="form-control" required />
       </div>
     </div>
-      <div class="form-group row">
-        <label for="wine-year" class="col-sm-2 col-form-label"> Year </label>
-        <div class="col-sm-10">
-          <input type="number" id="wine-year" class="form-control" />
-        </div>
+    <div class="form-group row">
+      <label for="wine-img-url" class="col-sm-2 col-form-label">
+        Image URL
+      </label>
+      <div class="col-sm-10">
+        <input type="text" id="wine-img-url" class="form-control" required />
       </div>
-      <div class="form-group row">
-        <label for="wine-kind" class="col-sm-2 col-form-label"> Kind </label>
-        <div class="col-sm-10">
-          <input type="text" id="wine-kind" class="form-control" required/>
-        </div>
+    </div>
+    <div class="form-group row">
+      <label for="wine-year" class="col-sm-2 col-form-label"> Year </label>
+      <div class="col-sm-10">
+        <input type="number" id="wine-year" class="form-control" />
       </div>
-      <div class="form-group row">
-        <label for="wine-cost" class="col-sm-2 col-form-label"> Cost </label>
-        <div class="col-sm-10">
-          <input type="text" id="wine-cost" class="form-control" />
-        </div>
+    </div>
+    <div class="form-group row">
+      <label for="wine-kind" class="col-sm-2 col-form-label"> Kind </label>
+      <div class="col-sm-10">
+        <input type="text" id="wine-kind" class="form-control" required />
       </div>
-      <div class="form-group row">
-        <label for="wine-reg" class="col-sm-2 col-form-label"> Region </label>
-        <div class="col-sm-10">
-          <input type="text" id="wine-reg" class="form-control"  required/>
-        </div>
+    </div>
+    <div class="form-group row">
+      <label for="wine-cost" class="col-sm-2 col-form-label"> Cost </label>
+      <div class="col-sm-10">
+        <input type="text" id="wine-cost" class="form-control" />
       </div>
-      <div class="form-group row">
-        <div class="col-sm-10">
-          <input type="submit" class="btn btn-primary" id="wine-create-btn" value="Submit" />
-        </div>
+    </div>
+    <div class="form-group row">
+      <label for="wine-reg" class="col-sm-2 col-form-label"> Region </label>
+      <div class="col-sm-10">
+        <input type="text" id="wine-reg" class="form-control" required />
       </div>
-    </form>
-  </div>
+    </div>
+    <div class="form-group row">
+      <div class="col-sm-10">
+        <input
+          type="submit"
+          class="btn btn-primary"
+          id="wine-create-btn"
+          value="Submit"
+        />
+      </div>
+    </div>
+  </form>
+</div>
   `;
 
     mainCenter
@@ -140,7 +147,7 @@
 
   async function showUserSidebar() {
     mainLeft.innerHTML = `
-        <div class="alert alert-success sm-5 text-monospace">
+        <div class="alert alert-success sm-5 text-monospace text-center">
             Hello, ${user.name}!
         </div>
       `;
@@ -152,25 +159,25 @@
   function showLogin() {
     mainLeft.innerHTML = `
     <div class="user-container">
-  <div class="form-group row">
-    <label for="user-name" class="col-sm-2 col-form-label text-monospace">
-      Name
-    </label>
-    <div class="col-sm-5">
-      <input type="text" id="user-name" class="form-control text-monospace" />
+    <div class="form-group row">
+      <label for="user-name" class="col-sm-2 col-form-label text-monospace">
+        Name
+      </label>
+      <div class="col-sm-5">
+        <input type="text" id="user-name" class="form-control text-monospace" />
+      </div>
+    </div>
+    <div class="form-group row">
+      <div class="col-sm-5">
+        <input
+          type="submit"
+          class="btn btn-primary text-monospace"
+          id="login-btn"
+          value="Login"
+        />
+      </div>
     </div>
   </div>
-  <div class="form-group row">
-    <div class="col-sm-5">
-      <input
-        type="submit"
-        class="btn btn-primary text-monospace"
-        id="login-btn"
-        value="Login"
-      />
-    </div>
-  </div>
-</div>
       `;
     mainLeft
       .querySelector("#login-btn")
@@ -281,12 +288,23 @@
 
     mainRight.innerHTML = `
     <div class="mb-3 d-flex justify-content-around">
-      <div class="btn-group" role="group" aria-label="Basic example">
-        <button type="button" id="my-wines" class="wine-list-selector ${myWinesActive} btn btn-primary text-monospace">My Favorites</button>
-        <button type="button" id="all-wines" class="wine-list-selector ${allWinesActive} btn btn-primary text-monospace">All Wines</button>
-      </div>
-    </div> 
-    <div class="list-group">
+    <div class="btn-group" role="group" aria-label="Basic example">
+      <button
+        type="button"
+        id="my-wines"
+        class="wine-list-selector ${myWinesActive} btn btn-primary text-monospace"
+      >
+        My Favorites
+      </button>
+      <button
+        type="button"
+        id="all-wines"
+        class="wine-list-selector ${allWinesActive} btn btn-primary text-monospace"
+      >
+        All Wines
+      </button>
+    </div>
+  </div>
     ${
       wines.length === 0
         ? `<div class="text-center text-muted"><p>No wines to show!</p></div>`
@@ -409,7 +427,7 @@
   <h4 id="wine-name" class="card-title text-monospace">${wine.name}</h4>
   </br>
   ${buttons}
-  <h6 class="card-kind text-monospace">${wine.year}</h6>
+  <h6 class="card-kind text-monospace">${wine.year || ""}</h6>
   <img class="wine-image mx-auto d-block" src="${wine.img_url}">
   <h6 class="card-kind text-monospace">${wine.kind}</h6>
   <h6 class="card-kind text-monospace">${wine.cost}</h6>
@@ -437,7 +455,7 @@
 </div> `;
     mainCenter
       .querySelector("#send-btn")
-      .addEventListener("click", handlesSendButton);
+      ?.addEventListener("click", handlesSendButton);
     if (user) {
       mainCenter
         .querySelector("#update-btn")
@@ -445,10 +463,9 @@
       mainCenter
         .querySelector("#delete-btn")
         .addEventListener("click", handlesDeleteButton(wine));
-
-      for (let e of mainCenter.querySelectorAll(".delete-comment-btn")) {
-        e.addEventListener("click", handlesDeleteCommentBtn);
-      }
+    }
+    for (let e of mainCenter.querySelectorAll(".delete-comment-btn")) {
+      e.addEventListener("click", handlesDeleteCommentBtn);
     }
     let loveBtn = document.querySelector("#love-btn");
     loveBtn.addEventListener("click", handlesLoveBtn);
@@ -460,13 +477,6 @@
     let comment = commentData.value;
     createComment(comment, wineID);
   }
-
-  // function myFetch(url, options = {}) {
-  //   if (user) {
-  //     options.headers["x-user-id"] = user.id;
-  //   }
-  //   return fetch(url, options);
-  // }
 
   async function createComment(comment, wineID) {
     await fetch("http://localhost:3000/comments", {
@@ -486,9 +496,21 @@
   async function handlesDeleteCommentBtn(event) {
     let wineID = event.target.dataset.wineId;
     let getComment = event.target.dataset.commentId;
-    await fetch(apiURL(`/comments/${getComment}`), {
-      method: "DELETE",
-    });
+    let userID = "";
+    if (user) {
+      userID = `${user.id}`;
+    }
+    let response = await fetch(
+      apiURL(`/comments/${getComment}?user_id=${userID}`),
+      {
+        method: "DELETE",
+      }
+    );
+    if (!response.ok) {
+      let data = await response.json();
+      alert(`Error occured while deleting comment: ${data.error}`);
+      return;
+    }
     fetchSingleWine(wineID);
   }
   function handlesUpdateButton(wineData) {
