@@ -3,7 +3,6 @@
   const mainCenter = document.querySelector("#main-center");
   const mainRight = document.querySelector("#main-right");
   const navRight = document.querySelector("#nav-right");
-  // const navLeft = document.querySelector("nav-left");
 
   let user = null;
 
@@ -369,7 +368,7 @@
     }
     showWine(data, data1, lovesID);
   }
-
+  const COMMENT_CHAR_LIMIT = 250;
   //shows each individual wine's info(includes love button, and comment section)
   function showWine(wine, comments, lovesID) {
     // fas is empty
@@ -406,10 +405,7 @@
       class="form-control text-monospace"
       id="comment-input"
       maxlength="250"
-    ></textarea>
-    <small id="passwordHelpBlock" class="form-text text-muted text-monospace">
-      Character limit of 250.
-    </small>
+    ></textarea> 
 </div>
 <div class="col-sm-10">
 <input
@@ -467,8 +463,27 @@
     for (let e of mainCenter.querySelectorAll(".delete-comment-btn")) {
       e.addEventListener("click", handlesDeleteCommentBtn);
     }
+
+    mainCenter
+      .querySelector("#comment-input")
+      .addEventListener("keydown", changeCharacterCount);
     let loveBtn = document.querySelector("#love-btn");
     loveBtn.addEventListener("click", handlesLoveBtn);
+  }
+
+  function changeCharacterCount(e) {
+    if (e.target.value >= COMMENT_CHAR_LIMIT) {
+      e.preventDefault;
+    }
+    let container = this.nextSibling;
+    if (!container || container.className !== "counter") {
+      container = document.createElement("div");
+      container.className = "counter";
+      this.parentNode.insertBefore(container, this.nextSibling);
+    }
+    container.innerHTML = `<div class="character-count-down text-muted"> Characters Remaining: ${
+      COMMENT_CHAR_LIMIT - this.value.length
+    }</div>`;
   }
 
   function handlesSendButton(e) {
