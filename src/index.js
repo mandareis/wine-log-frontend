@@ -306,7 +306,7 @@
   </div>
     ${
       wines.length === 0
-        ? `<div class="text-center text-muted"><p>No wines to show!</p></div>`
+        ? `<div class="text-center text-muted text-monospace"><p>No wines to show!</p></div>`
         : wines
             .map(function (w) {
               return `<a data-wine-id="${w.id}" class="wine-link list-group-item list-group-item-action text-monospace">${w.name}</a>`;
@@ -397,7 +397,8 @@
         </button>
     `;
       commentDiv = `
-    <div class="comment-box">
+      </br>
+      <div class="comment-box">
     <label class="text-monospace" for="exampleFormControlTextarea1"
       >Comment</label>
       <br>
@@ -415,7 +416,8 @@
   id="send-btn"
   value="Send"
 />
-</div>`;
+</div>
+</br>`;
     }
 
     mainCenter.innerHTML = `
@@ -434,6 +436,7 @@
  <br>
  <br>
  ${commentDiv}
+    </br>
     </br>
       <h5 class="text-monospace">Comments:</h5>
       ${comments
@@ -467,6 +470,7 @@
     mainCenter
       .querySelector("#comment-input")
       .addEventListener("keydown", changeCharacterCount);
+
     let loveBtn = document.querySelector("#love-btn");
     loveBtn.addEventListener("click", handlesLoveBtn);
   }

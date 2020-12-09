@@ -4,13 +4,13 @@
 
 ## Installation
 
-### 1.
+### 1. clone this repo
 
-### 2.
+### 2. Run bundle install
 
-### 3.
+### 3. Run db:seed
 
-### 4.
+### 4. Dont forget to sign in to start
 
 ## Contributing
 
